@@ -11,7 +11,7 @@ def get_data():
 
 def generate_data():
     print('按照提示输入信息：')
-    arr = ["username", "password", "imeiticket", "sourcetypeticket",
+    arr = ["pay_password", "username", "password", "imeiticket", "sourcetypeticket",
            "insert_cookie", "ASP.NET_SessionId", "hallticket"]
     data = {}
     for i in arr:
@@ -23,11 +23,12 @@ def generate_data():
 
 
 if __name__ == '__main__':
-    # a = input('是否需要生成数据（y or n)：')
-    # if a == 'y':
-    #     generate_data()
+    a = n
+    a = input('是否需要生成数据（y or n, default n)：')
+    if a == 'y':
+        generate_data()
     data = get_data()
     user = reserve_spider.ReserveUser(get_data())
     user.add_cookies()
-    user.book_fitness(s_date='2022-04-29', time_no='19:31-20:30')
+    # user.book_fitness(s_date='2022-04-29', time_no='19:31-20:30')
     # user.book_badminton()
