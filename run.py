@@ -23,7 +23,7 @@ def generate_data():
 
 
 if __name__ == '__main__':
-    a = n
+    a = 'n'
     a = input('是否需要生成数据（y or n, default n)：')
     if a == 'y':
         generate_data()
