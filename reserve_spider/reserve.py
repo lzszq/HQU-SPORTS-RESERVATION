@@ -1,11 +1,13 @@
 from typing import Optional
 import json
 from httpx import Client, Cookies
-from bs4 import BeautifulSoup
 import time
 
 USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'
-ACCEPT = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+ACCEPT_XML = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+ACCEPT_JSON = 'application/json, text/javascript, */*; q=0.01'
+BASE_URL = 'https://ecard-sh.hqu.edu.cn'
+BASE_GYM_URL = 'https://ecard-gymrsapp.hqu.edu.cn'
 
 
 class ReserveUser:
@@ -22,7 +24,7 @@ class ReserveUser:
         self.password = data['password']
         self.data = data
         self.client = Client(verify=False)
-        self.client.headers = {'User-Agent': USER_AGENT, 'Accept': ACCEPT}
+        self.client.headers = {'User-Agent': USER_AGENT, 'Accept': ACCEPT_XML}
 
     def add_cookies(self) -> bool:
         cookies = Cookies()
@@ -37,11 +39,7 @@ class ReserveUser:
         cookies.set('hallticket', self.data['hallticket'],
                     domain='ecard-sh.hqu.edu.cn')
         self.client.cookies = self.client._merge_cookies(cookies)
-        return True
 
-    def gymrsapp(self):
-        base_url = 'https://ecard-sh.hqu.edu.cn'
-        base_gym_url = 'https://ecard-gymrsapp.hqu.edu.cn'
         query_params = {
             'flowID':  '251',
             'type':    '3',
@@ -58,25 +56,62 @@ class ReserveUser:
             'comeapp': '1'
 
         }
-        res = self.client.post('https://ecard-sh.hqu.edu.cn//Page/Page', params=query_params, timeout=10)
-        res = self.client.get(base_url+res.headers['Location'], timeout=10)
-        res = self.client.get(base_gym_url+'/?'+res.headers['Location'].split('?')[1], timeout=10)
+        res = self.client.post(BASE_URL+'//Page/Page',
+                               params=query_params, timeout=10)
+        res = self.client.get(BASE_URL+res.headers['Location'], timeout=10)
+        res = self.client.get(
+            BASE_GYM_URL+'/?'+res.headers['Location'].split('?')[1], timeout=10)
 
+        return True
 
+    def book_fitness(self, s_date: str, time_no: str, try_cnt: int = 10):
+        return self.book(service_id=143, s_date=s_date, time_no=time_no, try_cnt=10)
 
-        res = self.client.get(f'''{base_gym_url}/product/getarea.html?{self.getarea(
-            s_dates=time.strftime("%Y-%m-%d", time.localtime(time.time()+86400)),
-            serviceid="144",
-            coordinatedes="2_badminton_%25E5%259C%25BA%25E5%259C%25B01%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B02%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B03%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B04%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B05%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B06%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B07%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B08%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B09%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B010%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B011%252C2_badminton_%25E5%259C%25BA%25E5%259C%25B012"
-        )}''', timeout=10)
-        print(res.text)
+    def book_badminton(self, s_date: str, time_no: str, try_cnt: int = 10):
+        return self.book(service_id=144, s_date=s_date, time_no=time_no, try_cnt=10)
 
-        badminton_params = {}
+    def book(self, service_id: int, s_date: str, time_no: str, try_cnt: int = 10):
+        '''
+        service_id: like 141, 143, 144
+        s_date: like 2022-04-29
+        time_no: like 18:30-19:30
+        '''
+        res = self.client.get(
+            BASE_GYM_URL + f'/product/findOkArea.html?s_date={s_date}&serviceid={service_id}', timeout=10)
+        data_json = json.loads(res.text)
+        arr = []
+        for i in data_json['object']:
+            if i['status'] == 1:
+                arr.append({"service_id": str(i['stock']['serviceid']), "id": str(i['id']), "stock_id": str(
+                    i['stockid']), "s_date": str(i['stock']['s_date']), "time_no": str(i['stock']['time_no'])})
+                print(arr[-1])
 
-        res = self.client.get(base_gym_url+'/product/show.html?id=144', timeout=10)
-        print(res.text)
+        headers = self.client._headers
+        headers['Host'] = 'ecard-gymrsapp.hqu.edu.cn'
+        headers['Accept'] = ACCEPT_JSON
+        headers['X-Requested-With'] = 'XMLHttpRequest'
+        headers['Content-Type'] = 'application/x-www-formurl-urlencoded; charset=UTF-8'
+        headers[
+            'Referer'] = f'https://ecard-gymrsapp.hqu.edu.cn/product/show.html?id={service_id}'
+        headers['Origin'] = BASE_GYM_URL
+        headers['Connection'] = 'keep-alive'
 
+        t = {}
+        for i in arr:
+            if i['s_date'] == s_date and i['time_no'] == time_no:
+                t = i
+                break
 
+        book_params = {
+            "param": '{"stockdetail":{"'+str(t["stock_id"])+'":"'+str(t['id'])+'"},"serviceid":"'+str(t['service_id'])+'","stockid":"'+str(t['stock_id'])+',","password":"'+self.data['pay_password']+'"}',
+            "num": "1",
+            "json": "true"
+        }
 
-    def getarea(self, s_dates: str, serviceid: str, coordinatedes: str):
-        return "s_dates=" + s_dates + "&serviceid=" + serviceid + "&coordinatedes=" + coordinatedes
+        while try_cnt != 0:
+            res = self.client.post(BASE_GYM_URL + '/order/tobook.html', params=book_params, headers=headers, timeout=100)
+            print(res.text)
+            cnt -= 1
+            time.sleep(1)
+
+        return True

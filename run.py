@@ -27,4 +27,5 @@ if __name__ == '__main__':
     data = get_data()
     user = reserve_spider.ReserveUser(get_data())
     user.add_cookies()
-    user.gymrsapp()
+    user.book_fitness(s_date='2022-04-29', time_no='19:31-20:30')
+    # user.book_badminton()
