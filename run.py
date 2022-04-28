@@ -8,9 +8,11 @@ def get_data():
         f.close()
     return data
 
+
 def generate_data():
     print('按照提示输入信息：')
-    arr = ["username", "password", "imeiticket", "sourcetypeticket", "insert_cookie", "ASP.NET_SessionId", "hallticket"]
+    arr = ["username", "password", "imeiticket", "sourcetypeticket",
+           "insert_cookie", "ASP.NET_SessionId", "hallticket"]
     data = {}
     for i in arr:
         a = input(f"请输入{i}：")

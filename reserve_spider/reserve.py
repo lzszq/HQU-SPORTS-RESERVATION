@@ -109,7 +109,8 @@ class ReserveUser:
         }
 
         while try_cnt != 0:
-            res = self.client.post(BASE_GYM_URL + '/order/tobook.html', params=book_params, headers=headers, timeout=100)
+            res = self.client.post(BASE_GYM_URL + '/order/tobook.html',
+                                   params=book_params, headers=headers, timeout=100)
             print(res.text)
             cnt -= 1
             time.sleep(1)
