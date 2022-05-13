@@ -139,6 +139,10 @@ class ReserveUser:
             res = self.client.get(f'https://ecard-gymrsapp.hqu.edu.cn/userInfo/select_user.html?sno={stu_num}&remark=0')
         else:
             res = self.client.get(f'https://ecard-gymrsapp.hqu.edu.cn/userInfo/select_user.html?name={stu_name}&remark=1')
+            data = json.loads(res.text)
+            for i in data:
+                print(i['name'])
+
         data = json.loads(res.text)
         if use_stu_num:
             return data[0]['name']
