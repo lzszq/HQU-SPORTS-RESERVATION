@@ -54,3 +54,4 @@ if __name__ == '__main__':
     # user.book_badminton_weekday(s_date='2022-05-18', time_no='16:31-17:30')
 
     # user.get_stunum(stu_name='', use_stu_num=False)
+    # print(user.get_stunum(stu_num=''))
