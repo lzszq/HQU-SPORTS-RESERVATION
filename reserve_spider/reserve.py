@@ -95,7 +95,7 @@ class ReserveUser:
         s_date: like 2022-04-29
         time_no: like 18:30-19:30
         '''
-        arr = get_info(s_date, service_id)
+        arr = self.get_info(s_date, service_id)
         
         headers = self.client._headers
         headers['Host'] = 'ecard-gymrsapp.hqu.edu.cn'
@@ -129,7 +129,7 @@ class ReserveUser:
         while try_cnt != 0:
             res = self.client.post(BASE_GYM_URL + '/order/tobook.html',
                                    params=book_params, headers=headers, timeout=100)
-            print(try_cnt+1, res.text)
+            print(try_cnt, res.text)
             try_cnt -= 1
             # time.sleep(1)
         return True
